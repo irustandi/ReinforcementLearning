@@ -43,7 +43,7 @@ for epsIdx in range(0, len(epsArray)):
                 bestArmMat[taskIdx, playIdx] = 1
 
             rewardSumMat[taskIdx, armIdx] = rewardSumMat[taskIdx, armIdx] + reward
-            armCountMat[taskIdx, armIdx] = armCountMat[taskIdx, armIdx] + 1
+            armCountMat[taskIdx, armIdx] += 1
             QstarEst[taskIdx, armIdx] = rewardSumMat[taskIdx, armIdx] / armCountMat[taskIdx, armIdx]
 
     rewardAvg = np.mean(rewardMat, axis=0)
