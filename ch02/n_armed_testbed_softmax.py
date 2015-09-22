@@ -9,18 +9,18 @@ rc('text', usetex=True)
 
 numArms = 10
 numTasks = 2000
-numPlays = 5000
+numPlays = 1000
 
-epsArray = [0, 0.01, 0.1]
+tempArray = [0.01, 0.1, 1]
 QstarMeans = np.random.rand(numTasks, numArms)
 QstarBestArm = np.argmax(QstarMeans, axis=1)
 Qinit = np.random.rand(numTasks, numArms) + QstarMeans
 
-avgRewardMat = np.zeros([len(epsArray), numPlays])
-pctOptActionMat = np.zeros([len(epsArray), numPlays])
+avgRewardMat = np.zeros([len(tempArray), numPlays])
+pctOptActionMat = np.zeros([len(tempArray), numPlays])
 
-for epsIdx in range(0, len(epsArray)):
-    eps  = epsArray[epsIdx]
+for tempIdx in range(0, len(tempArray)):
+    temp  = tempArray[tempIdx]
     QstarEst = np.zeros(Qinit.shape)
     rewardSumMat = np.zeros(Qinit.shape)
     armCountMat = np.zeros(Qinit.shape)
@@ -29,12 +29,9 @@ for epsIdx in range(0, len(epsArray)):
 
     for taskIdx in range(0, numTasks):
         for playIdx in range(0, numPlays):
-            randNum = np.random.rand()
-            if randNum <= eps:
-                # explore
-                armIdx = np.random.randint(0, numArms)
-            else:
-                armIdx = np.argmax(QstarEst[taskIdx,])
+            QstarEst_exp = np.exp(QstarEst[taskIdx,] / temp)
+            prob = QstarEst_exp / np.sum(QstarEst_exp)
+            armIdx = np.random.choice(np.arange(numArms), p=prob)
 
             reward = QstarMeans[taskIdx, armIdx] + np.random.randn()
             rewardMat[taskIdx, playIdx] = reward
@@ -43,22 +40,22 @@ for epsIdx in range(0, len(epsArray)):
                 bestArmMat[taskIdx, playIdx] = 1
 
             rewardSumMat[taskIdx, armIdx] = rewardSumMat[taskIdx, armIdx] + reward
-            armCountMat[taskIdx, armIdx] = armCountMat[taskIdx, armIdx] + 1
+            armCountMat[taskIdx, armIdx] += 1
             QstarEst[taskIdx, armIdx] = rewardSumMat[taskIdx, armIdx] / armCountMat[taskIdx, armIdx]
 
     rewardAvg = np.mean(rewardMat, axis=0)
-    avgRewardMat[epsIdx,] = rewardAvg
-    pctOptActionMat[epsIdx,] = np.mean(bestArmMat, axis=0)
+    avgRewardMat[tempIdx,] = rewardAvg
+    pctOptActionMat[tempIdx,] = np.mean(bestArmMat, axis=0)
 
 fig, axs = plt.subplots(2, 1)
-axs[0].plot(avgRewardMat[0,], label = r'$\epsilon$ = 0')
-axs[0].plot(avgRewardMat[1,], label = r'$\epsilon$ = 0.01')
-axs[0].plot(avgRewardMat[2,], label = r'$\epsilon$ = 0.1')
+axs[0].plot(avgRewardMat[0,], label = r'$\tau$ = 0.01')
+axs[0].plot(avgRewardMat[1,], label = r'$\tau$ = 0.1')
+axs[0].plot(avgRewardMat[2,], label = r'$\tau$ = 1')
 axs[0].legend()
 axs[0].set_title('Average Reward')
-axs[1].plot(pctOptActionMat[0,], label = r'$\epsilon$ = 0')
-axs[1].plot(pctOptActionMat[1,], label = r'$\epsilon$ = 0.01')
-axs[1].plot(pctOptActionMat[2,], label = r'$\epsilon$ = 0.1')
+axs[1].plot(pctOptActionMat[0,], label = r'$\tau$ = 0.01')
+axs[1].plot(pctOptActionMat[1,], label = r'$\tau$ = 0.1')
+axs[1].plot(pctOptActionMat[2,], label = r'$\tau$ = 1')
 axs[1].legend()
 axs[1].set_title('\% Optimal Action')
 
